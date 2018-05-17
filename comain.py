@@ -29,21 +29,9 @@ xdot = vertcat(1/B*(x2 - gamma*(sqrt(x1+x10) - sqrt(x10))), B*(-k3_const*x2**3 -
 # Objective term
 L = x1**2 + x2**2 + u**2
 
-M = 4 # RK4 steps per interval
-DT = T/N/M
-f = Function('f', [x, u], [xdot, L])
-X0 = MX.sym('X0', 2)
-U = MX.sym('U')
-X = X0
-Q = 0
-for j in range(M):
-    k1, k1_q = f(X, U)
-    k2, k2_q = f(X + DT/2 * k1, U)
-    k3, k3_q = f(X + DT/2 * k2, U)
-    k4, k4_q = f(X + DT * k3, U)
-    X=X+DT/6*(k1 +2*k2 +2*k3 +k4)
-    Q = Q + DT/6*(k1_q + 2*k2_q + 2*k3_q + k4_q)
-F = Function('F', [X0, U], [X, Q],['x0','p'],['xf','qf'])
+dae = {'x':x, 'p':u, 'ode':xdot, 'quad':L}
+opts = {'tf':T/N}
+F = integrator('F', 'cvodes', dae, opts)
 
 # Start with an empty NLP
 w = []
@@ -111,4 +99,6 @@ plt.step(tgrid, vertcat(DM.nan(1), u_opt), '-o')
 plt.xlabel('t')
 plt.legend(['x1','x2','u'])
 plt.grid()
+plt.ylim(-0.3, 0.25)
+plt.savefig('1.png', format='png')
 plt.show()
